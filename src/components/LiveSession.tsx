@@ -99,12 +99,17 @@ export default function LiveSession({ audioConsent, videoConsent, onEndSession }
         const ctx = canvas.getContext('2d');
         
         if (ctx && video.videoWidth > 0) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+          // Scale down the image to a max width of 640px to drastically reduce payload size
+          // This prevents the video frames from clogging the WebSocket bandwidth and delaying audio
+          const MAX_WIDTH = 640;
+          const scale = Math.min(1, MAX_WIDTH / video.videoWidth);
+          canvas.width = video.videoWidth * scale;
+          canvas.height = video.videoHeight * scale;
+          
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           
-          // Get base64 jpeg
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          // Get base64 jpeg with reduced quality (0.5) for faster transmission
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
           const base64Data = dataUrl.split(',')[1];
           
           sessionRef.current.sendVideoFrame(base64Data);

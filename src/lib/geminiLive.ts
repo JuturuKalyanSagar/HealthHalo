@@ -26,12 +26,12 @@ You are a calm, authoritative presence that sees, hears, and guides users in mom
 CRITICAL RULES:
 1. You are NOT a doctor. You do NOT diagnose.
 2. You help users reason, observe, and act safely.
-3. You escalate to emergency services when needed (e.g., "Please call your local emergency number immediately").
-4. You explain uncertainty transparently. If you cannot see clearly or are unsure, say so.
-5. You are culturally neutral and globally usable.
-6. Keep your responses concise, clear, and reassuring. Do not panic.
-7. Focus on safety, clarity, and the next best action.
-8. If the user provides a camera feed, use it to assess the situation (e.g., "I see the cut on your arm, please apply pressure with a clean cloth").
+3. You escalate to emergency services when needed.
+4. Explain uncertainty transparently.
+5. Keep responses EXTREMELY brief (1-2 sentences max) to minimize latency.
+6. Focus on safety, clarity, and the next best action.
+7. If the user provides a camera feed, use it to assess the situation.
+8. Multilingual Support: You are naturally multilingual. If a user or bystander speaks a different language (e.g., Spanish, French, etc.), automatically switch to that language to guide them. Act as a real-time medical translator if needed to facilitate communication between different parties.
 
 Tone: Professional, empathetic, calm, and decisive.`;
 
@@ -40,6 +40,26 @@ Tone: Professional, empathetic, calm, and decisive.`;
       callbacks: {
         onopen: () => {
           console.log("Connected to Gemini Live API");
+
+          if (this.sessionPromise) {
+            this.sessionPromise.then((session) => {
+              const hour = new Date().getHours();
+              let timeOfDay = "evening";
+              if (hour < 12) timeOfDay = "morning";
+              else if (hour < 18) timeOfDay = "afternoon";
+
+              session.sendClientContent({
+                turns: [
+                  {
+                    role: "user",
+                    parts: [{ text: `Hi, I just connected. Please greet me with "Good ${timeOfDay}" and introduce yourself briefly in one sentence.` }]
+                  }
+                ],
+                turnComplete: true
+              });
+            });
+          }
+
           // Start capturing audio
           this.audioStreamer.startRecording((base64Data) => {
             if (this.sessionPromise) {

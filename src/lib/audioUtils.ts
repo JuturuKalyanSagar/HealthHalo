@@ -31,8 +31,9 @@ export class AudioStreamer {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
       this.source = this.audioContext.createMediaStreamSource(this.mediaStream);
       
-      // Use ScriptProcessorNode for simplicity in this prototype
-      this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
+      // Reduced buffer size from 4096 to 1024 to significantly decrease input latency
+      // 4096 samples @ 16kHz = 256ms latency. 1024 samples @ 16kHz = 64ms latency.
+      this.processor = this.audioContext.createScriptProcessor(1024, 1, 1);
       
       this.processor.onaudioprocess = (e) => {
         if (this.isMuted) return; // Skip sending audio if muted
