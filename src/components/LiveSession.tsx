@@ -14,6 +14,7 @@ export default function LiveSession({ audioConsent, videoConsent, onEndSession }
   const [isCameraActive, setIsCameraActive] = useState(videoConsent);
   const [sessionState, setSessionState] = useState<'connecting' | 'connected' | 'error'>('connecting');
   const [agentSpeaking, setAgentSpeaking] = useState(false);
+  const [interrupted, setInterrupted] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -33,6 +34,7 @@ export default function LiveSession({ audioConsent, videoConsent, onEndSession }
             // Check if agent is speaking based on audio output
             if (msg.serverContent?.modelTurn?.parts?.[0]?.inlineData) {
               setAgentSpeaking(true);
+              setInterrupted(false);
               // Simple timeout to reset speaking state
               setTimeout(() => setAgentSpeaking(false), 500);
             }
@@ -40,6 +42,8 @@ export default function LiveSession({ audioConsent, videoConsent, onEndSession }
           () => {
             // Interruption callback
             setAgentSpeaking(false);
+            setInterrupted(true);
+            setTimeout(() => setInterrupted(false), 2000); // Clear after 2s
           }
         );
         
@@ -171,10 +175,18 @@ export default function LiveSession({ audioConsent, videoConsent, onEndSession }
           
           <div className="text-center space-y-2">
             <h2 className="text-xl font-medium tracking-tight">
-              {agentSpeaking ? 'Agent is speaking...' : 'Listening...'}
+              {interrupted ? (
+                <span className="text-amber-400">Interrupted...</span>
+              ) : agentSpeaking ? (
+                'Agent is speaking...'
+              ) : (
+                'Listening...'
+              )}
             </h2>
             <p className="text-sm text-zinc-400 max-w-xs">
-              Speak naturally. You can interrupt at any time.
+              {interrupted 
+                ? 'Agent stopped speaking due to background noise or your voice.' 
+                : 'Speak naturally. You can interrupt at any time.'}
             </p>
           </div>
 
