@@ -1,0 +1,19 @@
+HealthHalo High-Level Design
+
+1. Frontend (React + Vite)
+- Handles user consent (Audio/Video).
+- Captures microphone audio using AudioContext and ScriptProcessor/AudioWorklet.
+- Captures camera frames using getUserMedia and canvas.toDataURL.
+- Connects to Gemini Live API using @google/genai SDK.
+- Streams audio and video frames to Gemini Live.
+- Receives audio from Gemini Live and plays it back using AudioContext.
+
+2. Backend (Express + Node.js)
+- Serves the React frontend.
+- Provides API endpoints for logging user consent and deleting session data.
+- Uses SQLite to simulate Firestore for logging consent status.
+
+3. Gemini Live API
+- Uses gemini-2.5-flash-native-audio-preview-09-2025 model.
+- Configured with a system prompt to act as a healthcare Live Agent.
+- Handles real-time audio and video input, and generates audio output.

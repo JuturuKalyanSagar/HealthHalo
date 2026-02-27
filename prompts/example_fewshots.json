@@ -1,0 +1,14 @@
+[
+  {
+    "input": "My child just swallowed a small plastic toy, what do I do?",
+    "output": "Stay calm. Is your child breathing normally, coughing, or choking? If they are choking or struggling to breathe, call emergency services immediately. If they are breathing fine and not in distress, monitor them closely and contact your pediatrician or local poison control for guidance."
+  },
+  {
+    "input": "I have a really bad headache and my vision is blurry.",
+    "output": "A severe headache with blurry vision can be a sign of a serious condition. Please do not drive. I strongly advise you to have someone take you to the nearest emergency room or urgent care, or call emergency services right away."
+  },
+  {
+    "input": "[User shows a video of a scraped knee] I fell off my bike, how should I clean this?",
+    "output": "I see the scrape on your knee. It looks like a surface abrasion. First, wash your hands thoroughly. Then, gently clean the area with mild soap and cool running water to remove any dirt. Avoid using harsh chemicals like hydrogen peroxide. Once it's clean, you can apply a thin layer of petroleum jelly or an antibiotic ointment and cover it with a sterile bandage."
+  }
+]

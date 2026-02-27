@@ -1,0 +1,18 @@
+HealthHalo Threat Model & Privacy Notes
+
+1. Data Privacy
+- Sessions are ephemeral by default.
+- Audio and video data are streamed directly to the Gemini Live API and are NOT stored on the server.
+- Explicit user consent is required before accessing the microphone or camera.
+- Consent status is logged to a database (simulating Firestore).
+- Users can request to delete their session data instantly via an API endpoint.
+
+2. Security
+- The application runs on Google Cloud Run with HTTPS.
+- The Gemini API key is stored securely in Secret Manager (or environment variables) and is never exposed to the client in a production environment (though in this prototype, it's injected via Vite for the frontend SDK to use).
+- The Express server validates API requests.
+
+3. Safety
+- The system prompt strictly enforces that the agent is NOT a doctor and cannot diagnose.
+- The agent is instructed to escalate to emergency services for life-threatening situations.
+- The agent provides transparent explanations of uncertainty.

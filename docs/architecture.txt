@@ -1,0 +1,23 @@
++---------------------------------------------------+
+|                  HealthHalo                       |
++---------------------------------------------------+
+|                                                   |
+|  [User Device]                                    |
+|   - Mic (PCM16 Audio)                             |
+|   - Camera (Base64 JPEG)                          |
+|   - React UI (Vite)                               |
+|          |                                        |
+|          | (WebSockets / WebRTC via GenAI SDK)    |
+|          v                                        |
+|  [Google Cloud]                                   |
+|   - Cloud Run (Express Server)                    |
+|       - Serves static assets                      |
+|       - API endpoints for consent logging         |
+|       - SQLite (Mocking Firestore)                |
+|                                                   |
+|  [Gemini Live API]                                |
+|   - Real-time multimodal session                  |
+|   - Audio streaming (in/out)                      |
+|   - Video frame streaming (in)                    |
+|                                                   |
++---------------------------------------------------+

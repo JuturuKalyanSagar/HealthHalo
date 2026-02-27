@@ -1,0 +1,8 @@
+{
+  "name": "HealthHalo",
+  "description": "A real-time, multimodal healthcare Live Agent that gives users super-human capability in moments of medical uncertainty.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
