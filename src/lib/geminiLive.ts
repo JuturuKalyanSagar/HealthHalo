@@ -41,25 +41,6 @@ Tone: Professional, empathetic, calm, and decisive.`;
         onopen: () => {
           console.log("Connected to Gemini Live API");
 
-          if (this.sessionPromise) {
-            this.sessionPromise.then((session) => {
-              const hour = new Date().getHours();
-              let timeOfDay = "evening";
-              if (hour < 12) timeOfDay = "morning";
-              else if (hour < 18) timeOfDay = "afternoon";
-
-              session.sendClientContent({
-                turns: [
-                  {
-                    role: "user",
-                    parts: [{ text: `Hi, I just connected. Please greet me with "Good ${timeOfDay}" and introduce yourself briefly in one sentence.` }]
-                  }
-                ],
-                turnComplete: true
-              });
-            });
-          }
-
           // Start capturing audio
           this.audioStreamer.startRecording((base64Data) => {
             if (this.sessionPromise) {
@@ -131,16 +112,21 @@ Tone: Professional, empathetic, calm, and decisive.`;
     this.audioStreamer.unmute();
   }
 
+  async playInitialAudio(base64Data: string): Promise<number> {
+    this.audioStreamer.initPlayback();
+    return await this.audioStreamer.playBase64Audio(base64Data);
+  }
+
   disconnect() {
+    this.audioStreamer.stopRecording();
+    this.audioStreamer.stopPlayback();
     if (this.sessionPromise) {
       this.sessionPromise.then((session) => {
         // Close the session
         // Note: The SDK might not have a direct close method on the session object yet,
         // but we can stop the audio streamer.
-        this.audioStreamer.stopRecording();
-        this.audioStreamer.stopPlayback();
-        this.sessionPromise = null;
       });
+      this.sessionPromise = null;
     }
   }
 }

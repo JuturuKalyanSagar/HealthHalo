@@ -1,14 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Mic, Camera, CheckCircle2 } from 'lucide-react';
+import { GoogleGenAI } from '@google/genai';
 
 interface ConsentScreenProps {
-  onConsent: (audio: boolean, video: boolean) => void;
+  onConsent: (audio: boolean, video: boolean, initialAudio?: string | null) => void;
 }
 
 export default function ConsentScreen({ onConsent }: ConsentScreenProps) {
   const [audioConsent, setAudioConsent] = useState(true);
   const [videoConsent, setVideoConsent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [greetingAudio, setGreetingAudio] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchGreeting = async () => {
+      try {
+        const hour = new Date().getHours();
+        let timeOfDay = "evening";
+        if (hour < 12) timeOfDay = "morning";
+        else if (hour < 18) timeOfDay = "afternoon";
+
+        // @ts-ignore - Vite env var
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+        if (!apiKey) return;
+        
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+          model: "gemini-2.5-flash-preview-tts",
+          contents: `Good ${timeOfDay}. I am HealthHalo. How can I help you today?`,
+          config: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: "Zephyr" }
+              }
+            }
+          }
+        });
+        const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+        if (base64Audio) {
+          setGreetingAudio(base64Audio);
+        }
+      } catch (err) {
+        console.error("Failed to pre-fetch greeting", err);
+      }
+    };
+    fetchGreeting();
+  }, []);
 
   const handleStart = async () => {
     setLoading(true);
@@ -23,11 +61,11 @@ export default function ConsentScreen({ onConsent }: ConsentScreenProps) {
           videoConsent,
         }),
       });
-      onConsent(audioConsent, videoConsent);
+      onConsent(audioConsent, videoConsent, greetingAudio);
     } catch (err) {
       console.error('Failed to log consent', err);
       // Proceed anyway for the prototype
-      onConsent(audioConsent, videoConsent);
+      onConsent(audioConsent, videoConsent, greetingAudio);
     }
   };
 

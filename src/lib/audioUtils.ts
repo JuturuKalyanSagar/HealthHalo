@@ -27,7 +27,13 @@ export class AudioStreamer {
   async startRecording(onAudioData: (base64Data: string) => void) {
     this.onAudioData = onAudioData;
     try {
-      this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
       this.source = this.audioContext.createMediaStreamSource(this.mediaStream);
       
@@ -76,10 +82,39 @@ export class AudioStreamer {
       this.playbackContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       this.nextPlayTime = this.playbackContext.currentTime;
     }
+    if (this.playbackContext.state === 'suspended') {
+      this.playbackContext.resume();
+    }
   }
 
-  playAudioChunk(base64Data: string) {
-    if (!this.playbackContext) return;
+  async playBase64Audio(base64Data: string): Promise<number> {
+    if (!this.playbackContext) return 0;
+    
+    try {
+      const arrayBuffer = this.base64ToBuffer(base64Data);
+      const audioBuffer = await this.playbackContext.decodeAudioData(arrayBuffer);
+      
+      const source = this.playbackContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(this.playbackContext.destination);
+      
+      const currentTime = this.playbackContext.currentTime;
+      if (this.nextPlayTime < currentTime) {
+        this.nextPlayTime = currentTime;
+      }
+      
+      source.start(this.nextPlayTime);
+      this.nextPlayTime += audioBuffer.duration;
+      
+      return audioBuffer.duration;
+    } catch (e) {
+      console.error("Failed to decode audio data, falling back to PCM16", e);
+      return this.playAudioChunk(base64Data);
+    }
+  }
+
+  playAudioChunk(base64Data: string): number {
+    if (!this.playbackContext) return 0;
     
     const pcm16 = this.base64ToBuffer(base64Data);
     const float32 = this.pcm16ToFloat32(pcm16);
@@ -98,6 +133,8 @@ export class AudioStreamer {
     
     source.start(this.nextPlayTime);
     this.nextPlayTime += audioBuffer.duration;
+    
+    return audioBuffer.duration;
   }
 
   stopPlayback() {

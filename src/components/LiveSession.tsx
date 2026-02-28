@@ -6,11 +6,18 @@ import Waveform from './Waveform';
 interface LiveSessionProps {
   audioConsent: boolean;
   videoConsent: boolean;
+  initialAudio?: string | null;
   onEndSession: () => void;
 }
 
-export default function LiveSession({ audioConsent, videoConsent, onEndSession }: LiveSessionProps) {
+export default function LiveSession({ audioConsent, videoConsent, initialAudio, onEndSession }: LiveSessionProps) {
   const [isMuted, setIsMuted] = useState(false);
+  const isMutedRef = useRef(isMuted);
+
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
+
   const [isCameraActive, setIsCameraActive] = useState(videoConsent);
   const [sessionState, setSessionState] = useState<'connecting' | 'connected' | 'error'>('connecting');
   const [agentSpeaking, setAgentSpeaking] = useState(false);
@@ -20,6 +27,7 @@ export default function LiveSession({ audioConsent, videoConsent, onEndSession }
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessionRef = useRef<GeminiLiveSession | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const initialAudioPlayedRef = useRef(false);
 
   useEffect(() => {
     const initSession = async () => {
@@ -29,6 +37,19 @@ export default function LiveSession({ audioConsent, videoConsent, onEndSession }
 
         sessionRef.current = new GeminiLiveSession(apiKey);
         
+        if (initialAudio && !initialAudioPlayedRef.current) {
+          initialAudioPlayedRef.current = true;
+          const duration = await sessionRef.current.playInitialAudio(initialAudio);
+          setAgentSpeaking(true);
+          sessionRef.current.mute(); // Mute mic to prevent echo
+          setTimeout(() => {
+            setAgentSpeaking(false);
+            if (sessionRef.current && !isMutedRef.current) {
+              sessionRef.current.unmute();
+            }
+          }, duration * 1000 + 500); // add 500ms buffer
+        }
+
         await sessionRef.current.connect(
           (msg) => {
             // Check if agent is speaking based on audio output
